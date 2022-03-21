@@ -1,6 +1,6 @@
 {
   "apps": [{
-    "name": "certbot",
+    "name": "certbot-hook",
     "script": "./cron.js",
     "args": "--renew-hook",
     "instances": 1,
