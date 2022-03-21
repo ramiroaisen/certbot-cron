@@ -2,9 +2,12 @@
 import { $ } from "zx";
 import { Command } from "commander";
 import ms from "ms";
+import { fileURLToPath } from "url";  
 import { createWriteStream } from "fs";
 
-const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms)); 
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms)); 
+
+const __filename = fileURLToPath(import.meta.url);
 
 export type Config = {
   interval: number | string
@@ -14,7 +17,7 @@ export type Config = {
 }
 
 // @ts-ignore
-const mod = require("./config.js");
+const mod = (await import("./config.js")).default;
 
 let { args, interval, delay, hook }: Config = mod;
 
@@ -31,35 +34,30 @@ cli.version("0.0.1")
   .option("--renew-hook", "Run the renew hook config action")
   .option("--renew-hook-manager")
   
-const opts: any = cli.parse().opts();
+const opts = cli.parse().opts();
 
-const run = async (opts: { renewHookManager: boolean, renewHook: boolean }) => {
+if (opts.renewHookManager) {
+  const file = createWriteStream("./hook.log", { flags: "a" });
+  await $`${__filename} --renew-hook`.pipe(file);
 
-  if (opts.renewHookManager) {
-    const file = createWriteStream("./hook.log", { flags: "a" });
-    await $`${__filename} --renew-hook`.pipe(file);
-  
-  } else if (opts.renewHook) {
-      console.log(`Renew hook called`);
-    if(hook) {
-      await hook();
-      console.log(`Renew hook executed`);
-    } else {
-      console.log(`Nothing to do (no renew hook supplied)`);
-    }
+} else if (opts.renewHook) {
+    console.log(`Renew hook called`);
+  if(hook) {
+    await hook();
+    console.log(`Renew hook executed`);
   } else {
-    await sleep(delay as number);
-    while(true) {
-      await $`certbot renew ${args} --renew-hook=${$.quote(__filename)} --renew-hook-manager`;
-      await sleep(interval as number);
-    }
+    console.log(`Nothing to do (no renew hook supplied)`);
+  }
+
+} else {
+  await sleep(delay);
+  while(true) {
+    await $`certbot renew ${args} --renew-hook=${$.quote(__filename)} --renew-hook-manager`;
+    await sleep(interval);
   }
 }
 
-run(opts).then(() => {
-  process.exit();
-});
-
+process.exit();
 
 
 
