@@ -4,10 +4,13 @@ import { Command } from "commander";
 import ms from "ms";
 import { fileURLToPath } from "url";  
 import { createWriteStream } from "fs";
+import path from "path";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms)); 
 
 const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const pm2Hook = `${__dirname}/pm2.renew.config.json`;
 
 export type Config = {
   interval: number | string
@@ -34,30 +37,25 @@ const cli = new Command();
 
 cli.version("0.0.1")
   .option("--renew-hook", "Run the renew hook config action")
-  .option("--renew-hook-manager")
   
 const opts = cli.parse().opts();
 
-if (opts.renewHookManager) {
-  const file = createWriteStream("./hook.log", { flags: "a" });
-  await $`${__filename} --renew-hook`.pipe(file);
-
-} else if (opts.renewHook) {
-    console.log(`[${date()}]: renew hook called`);
+if (opts.renewHook) {
+  console.log(`renew hook called`);
   if(hook) {
     await hook();
-    console.log(`[${date()}]: renew hook executed`);
+    console.log(`renew hook executed`);
   } else {
-    console.log(`[${date()}]: nothing to do (no renew hook supplied)`);
+    console.log(`nothing to do (no renew hook supplied)`);
   }
 
 } else {
-  console.log("process start, waiting start delay", ms(delay));
+  console.log("process start, waiting start delay:", ms(delay));
   await sleep(delay);
   while(true) {
     console.log("running certbot renew");
-    await $`certbot renew ${args} --renew-hook=${$.quote(__filename) + " --renew-hook-manager"}`;
-    console.log("waiting interval", ms(interval));
+    await $`certbot renew ${args} --renew-hook=${`pm2 start ${$.quote(pm2Hook)}`}`;
+    console.log("command end, waiting interval:", ms(interval));
     await sleep(interval); 
   }
 }
