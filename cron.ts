@@ -43,6 +43,9 @@ const opts = cli.parse().opts();
 if (opts.renewHook) {
   console.log(`renew hook called`);
   if(hook) {
+    console.log("waiting 10m (give time to other certificates)");
+    await sleep(1_000 * 60 * 10);
+    console.log("calling renew hook")
     await hook();
     console.log(`renew hook executed`);
   } else {
