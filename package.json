@@ -1,0 +1,23 @@
+{
+  "name": "certbot-cron",
+  "version": "0.0.1",
+  "description": "",
+  "type": "module",
+  "main": "cron.js",
+  "scripts": {
+    "dev": "tsc -w",
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/ms": "^0.7.31",
+    "typescript": "^4.6.2"
+  },
+  "dependencies": {
+    "commander": "^9.1.0",
+    "ms": "^2.1.3",
+    "zx": "^6.0.6"
+  }
+}
