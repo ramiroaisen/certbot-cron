@@ -29,14 +29,15 @@ if (opts.pm2Exec) {
     console.log("[Hook]: pm2 called");
 }
 else if (opts.renewHook) {
-    console.log(`renew hook called`);
-    process.on("SIGINT", () => {
-        console.log("SIGINT, process stopped");
+    console.log(`renew hook process start`);
+    process.on("SIGINT", async () => {
+        console.log("SIGINT: process stopped");
+        await sleep(100);
         process.exit();
     });
     if (hook) {
-        console.log("waiting 15m (give time to other certificates)");
-        await sleep(1_000 * 60 * 15);
+        console.log("waiting 2m (give time to other certificates)");
+        await sleep(1_000 * 60 * 2);
         console.log("calling renew hook");
         await hook();
         console.log(`renew hook executed`);
