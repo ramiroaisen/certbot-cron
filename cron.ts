@@ -3,6 +3,7 @@ import { $ } from "zx";
 import { Command } from "commander";
 import ms from "ms";
 import { fileURLToPath } from "url";  
+import { createWriteStream } from "fs";
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms)); 
 
@@ -39,7 +40,12 @@ cli.version("0.0.1")
   
 const opts = cli.parse().opts();
 
-if (opts.renewHook) {
+if (opts.renewHookManager) {
+  const file = createWriteStream("./hook.log", { flags: "a" });
+  await $`${__filename} --renew-hook`.pipe(file);
+  process.exit();
+
+} else if (opts.renewHook) {
     console.log(`Renew hook called`);
   if(hook) {
     await hook();
@@ -51,7 +57,7 @@ if (opts.renewHook) {
 } else {
   await sleep(delay);
   while(true) {
-    await $`certbot renew ${args} --renew-hook="pm2 start certbot-hook"`;
+    await $`certbot renew ${args} --renew-hook=${$.quote(__filename)} --renew-hook-manager`;
     await sleep(interval);
   }
 }
