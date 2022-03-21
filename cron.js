@@ -16,6 +16,7 @@ if (delay == null)
     delay = interval;
 if (typeof delay === "string")
     delay = ms(delay);
+const date = () => new Date().toLocaleString();
 const cli = new Command();
 cli.version("0.0.1")
     .option("--renew-hook", "Run the renew hook config action")
@@ -26,19 +27,22 @@ if (opts.renewHookManager) {
     await $ `${__filename} --renew-hook`.pipe(file);
 }
 else if (opts.renewHook) {
-    console.log(`Renew hook called`);
+    console.log(`[${date()}]: renew hook called`);
     if (hook) {
         await hook();
-        console.log(`Renew hook executed`);
+        console.log(`[${date()}]: renew hook executed`);
     }
     else {
-        console.log(`Nothing to do (no renew hook supplied)`);
+        console.log(`[${date()}]: nothing to do (no renew hook supplied)`);
     }
 }
 else {
+    console.log("process start, waiting start delay", ms(delay));
     await sleep(delay);
     while (true) {
+        console.log("running certbot renew");
         await $ `certbot renew ${args} --renew-hook=${$.quote(__filename) + " --renew-hook-manager"}`;
+        console.log("waiting interval", ms(interval));
         await sleep(interval);
     }
 }
