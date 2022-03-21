@@ -7,7 +7,7 @@ import path from "path";
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const pm2Hook = `${__dirname}/pm2.renew.config.json`;
+const pm2Config = `${__dirname}/pm2.renew.config.json`;
 // @ts-ignore
 const mod = (await import("./config.js")).default;
 let { args, interval, delay, hook } = mod;
@@ -18,16 +18,21 @@ if (delay == null)
     delay = interval;
 if (typeof delay === "string")
     delay = ms(delay);
-const date = () => new Date().toLocaleString();
 const cli = new Command();
 cli.version("0.0.1")
-    .option("--renew-hook", "Run the renew hook config action");
+    .option("--renew-hook", "Run the renew hook config action")
+    .option("--pm2-exec");
 const opts = cli.parse().opts();
-if (opts.renewHook) {
+if (opts.pm2Exec) {
+    $.verbose = false;
+    await $ `pm2 start ${pm2Config}`;
+    console.log("[Hook]: pm2 called");
+}
+else if (opts.renewHook) {
     console.log(`renew hook called`);
     if (hook) {
-        console.log("waiting 10m (give time to other certificates)");
-        await sleep(1_000 * 60 * 10);
+        console.log("waiting 15m (give time to other certificates)");
+        await sleep(1_000 * 60 * 15);
         console.log("calling renew hook");
         await hook();
         console.log(`renew hook executed`);
@@ -41,7 +46,7 @@ else {
     await sleep(delay);
     while (true) {
         console.log("running certbot renew");
-        await $ `certbot renew ${args} --renew-hook=${`pm2 start ${$.quote(pm2Hook)}`}`;
+        await $ `certbot renew ${args} --renew-hook=${$.quote(__filename) + " --pm2-exec"}`;
         console.log("command end, waiting interval:", ms(interval));
         await sleep(interval);
     }
