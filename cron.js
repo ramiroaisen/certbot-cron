@@ -30,6 +30,10 @@ if (opts.pm2Exec) {
 }
 else if (opts.renewHook) {
     console.log(`renew hook called`);
+    process.on("SIGINT", () => {
+        console.log("SIGINT, process stopped");
+        process.exit();
+    });
     if (hook) {
         console.log("waiting 15m (give time to other certificates)");
         await sleep(1_000 * 60 * 15);
