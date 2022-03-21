@@ -38,7 +38,7 @@ else if (opts.renewHook) {
 else {
     await sleep(delay);
     while (true) {
-        await $ `certbot renew ${args} --renew-hook=${$.quote(__filename) + "--renew-hook-manager"}`;
+        await $ `certbot renew ${args} --renew-hook=${$.quote(__filename) + " --renew-hook-manager"}`;
         await sleep(interval);
     }
 }
