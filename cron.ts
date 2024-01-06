@@ -67,10 +67,15 @@ if(opts.pm2Exec) {
   console.log("process start, waiting start delay:", ms(delay));
   await sleep(delay);
   while(true) {
-    console.log("running certbot renew");
-    await $`certbot renew ${args} --renew-hook=${$.quote(__filename) + " --pm2-exec"}`;
-    console.log("command end, waiting interval:", ms(interval));
-    await sleep(interval); 
+    try {
+      console.log("running certbot renew");
+      await $`certbot renew ${args} --renew-hook=${$.quote(__filename) + " --pm2-exec"}`;
+      console.log("command end, waiting interval:", ms(interval));
+      await sleep(interval); 
+    } catch(e) {
+      console.log("error", e);
+      await sleep(1000 * 60 * 5);
+    }
   }
 }
 

@@ -36,24 +36,30 @@ else if (opts.renewHook) {
         process.exit();
     });
     if (hook) {
-        console.log("waiting 2m (give time to other certificates)");
-        await sleep(1_000 * 60 * 2);
+        console.log("waiting 5m (give time to other certificates)");
+        await sleep(1_000 * 60 * 5);
         console.log("calling renew hook");
         await hook();
-        console.log(`renew hook executed`);
+        console.log(`renew hook executed, process exit`);
     }
     else {
-        console.log(`nothing to do (no renew hook supplied)`);
+        console.log(`nothing to do (no renew hook supplied) process exit`);
     }
 }
 else {
     console.log("process start, waiting start delay:", ms(delay));
     await sleep(delay);
     while (true) {
-        console.log("running certbot renew");
-        await $ `certbot renew ${args} --renew-hook=${$.quote(__filename) + " --pm2-exec"}`;
-        console.log("command end, waiting interval:", ms(interval));
-        await sleep(interval);
+        try {
+            console.log("running certbot renew");
+            await $ `certbot renew ${args} --renew-hook=${$.quote(__filename) + " --pm2-exec"}`;
+            console.log("command end, waiting interval:", ms(interval));
+            await sleep(interval);
+        }
+        catch (e) {
+            console.log("error", e);
+            await sleep(1000 * 60 * 5);
+        }
     }
 }
 process.exit();
